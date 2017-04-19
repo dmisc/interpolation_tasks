@@ -1,23 +1,14 @@
 extern crate gnuplot;
 extern crate la;
 extern crate nalgebra as na;
+extern crate interp_util;
 
 use na::core::{DMatrix, MatrixVec, Dynamic};
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::ops::IndexMut;
 use gnuplot::*;
-
-fn linspace(min: f64, max: f64, num: usize) -> Vec<f64> {
-    let dt = (max - min) / ((num - 1) as f64);
-    let mut pts = Vec::with_capacity(num);
-    for i in 0..num {
-        pts.push(min + dt * i as f64);
-    }
-
-    pts
-}
-
+use interp_util::*;
 
 fn create_col(data: Vec<f64>) -> DMatrix<f64> {
     DMatrix::from_data(MatrixVec::new(Dynamic::new(data.len()), Dynamic::new(1), data))

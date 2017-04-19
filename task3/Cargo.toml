@@ -7,3 +7,4 @@ authors = ["nm"]
 nalgebra = "0.11"
 la = "0.2.0"
 gnuplot = "0.0.22"
+interp_util = { path = "../interp_util" }

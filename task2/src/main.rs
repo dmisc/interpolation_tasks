@@ -1,8 +1,10 @@
 extern crate gnuplot;
+extern crate interp_util;
 
 use std::f64;
 
 use gnuplot::*;
+use interp_util::*;
 
 fn polynomial_error(x0: f64, pts: &Vec<f64>) -> f64 {
     let mut res = 0.0;
@@ -45,16 +47,6 @@ fn polynomial_derivative_error(x0: f64, pts: &Vec<f64>) -> f64 {
     }
 
     res
-}
-
-fn linspace(min: f64, max: f64, num: usize) -> Vec<f64> {
-    let dt = (max - min) / ((num - 1) as f64);
-    let mut pts = Vec::with_capacity(num);
-    for i in 0..num {
-        pts.push(min + dt * i as f64);
-    }
-
-    pts
 }
 
 fn chebyshev_knots(k: usize) -> Vec<f64> {
