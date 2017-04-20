@@ -6,8 +6,6 @@ extern crate statistics;
 use gnuplot::*;
 use interp_util::*;
 use rand::distributions::{IndependentSample, Normal};
-use std::cmp::min;
-use std::cmp::max;
 use statistics::*;
 use rand::Rng;
 
@@ -26,14 +24,16 @@ fn calc_derivative(xs: &[f64], ys: &[f64]) -> Vec<f64> {
     res
 }
 
-fn plot_line_data(a: f64, b: f64, x: &[f64], y: &[f64]) {
+fn plot_line_data(a: f64, b: f64, x: &[f64], y: &[f64], der_x: &[f64], der_y: &[f64]) {
     let first_pt = x[0];
     let last_pt = x[x.len() - 1];
     let mut fg = Figure::new();
     fg.axes2d()
         .set_size(1.0, 1.0)
+        .set_legend(Graph(0.5), Graph(1.0), &[], &[])
         .set_x_ticks(Some((Auto, 1)), &[Mirror(false)], &[])
         .set_y_ticks(Some((Auto, 1)), &[Mirror(false)], &[])
+        .boxes(der_x, der_y, &[Caption("Derivative"), Color("gray")])
         .points(x, y, &[Caption("Function with erros"), PointSize(1.0), Color("red")])
         .lines(&[first_pt, last_pt], &[a * first_pt + b, a * last_pt + b],
             &[Caption("Reference function"), LineWidth(1.5), Color("green")]);
@@ -45,20 +45,22 @@ fn plot_line_data(a: f64, b: f64, x: &[f64], y: &[f64]) {
 fn main() {
     let a = 1.5;
     let b = 1.0;
-    let err_sigma = 1.0;
-    let outliers = 3;
+    let err_sigma = 3.0;
+
+    println!("f(x) = {}*x + {}", a, b);
+    println!("Default error: {}", err_sigma);
+    let outlier_num = 3;
     let xs = linspace(0.0, 100.0, 100);
     let mut ys = generate_function(&xs, a, b, err_sigma);
-    for i in 0..outliers {
+    for i in 0..outlier_num {
         let mut rng = rand::thread_rng();
         let idx = rng.gen_range::<usize>(0, ys.len());
-        let err = rng.gen_range(err_sigma * 10.0, err_sigma * 20.0) * (2 * rng.gen_range::<i32>(0, 2) - 1) as f64;
+        let err = rng.gen_range(err_sigma * 20.0, err_sigma * 30.0) * (2 * rng.gen_range::<i32>(0, 2) - 1) as f64;
         println!("Outlier #{}: {}, error: {}", i + 1, idx, err);
         ys[idx] += err;
     }
     let der = calc_derivative(&xs, &ys);
 
-    plot_line_data(a, b, &xs, &ys);
 
     let der_mean = mean(&der);
     let der_variance = variance(&der);
@@ -70,26 +72,23 @@ fn main() {
         }
     }
 
-    let max_der = der.iter().max_by(|x, y| x.partial_cmp(y).unwrap()).unwrap();
-    let min_der = der.iter().max_by(|x, y| y.partial_cmp(x).unwrap()).unwrap();
-    let box_num = 50;
-    let step = (max_der - min_der) / box_num as f64;
-    let mut boxes = (0..box_num).map(|_| 0.0).collect::<Vec<_>>();
-    let box_centers = (0..box_num).map(|i| min_der + step / 2.0 + step * i as f64).collect::<Vec<_>>();
-    for d in der.iter() {
-        let t = (d - min_der) / (max_der - min_der);
-        let mut idx = (t * box_num as f64) as i32;
-        idx = max(min(box_num - 1, idx), 0);
-        boxes[idx as usize] += 1.0;
-    }
-    
-    let mut fg = Figure::new();
-    fg.axes2d()
-        .set_size(1.0, 1.0)
-        .set_x_ticks(Some((Auto, 1)), &[Mirror(false)], &[])
-        .set_y_ticks(Some((Auto, 1)), &[Mirror(false)], &[])
-        .boxes(&box_centers, &boxes, &[]);
+    plot_line_data(a, b, &xs, &ys, &xs[1 .. xs.len() - 1], &der);
 
-    fg.set_terminal("pngcairo", "der_distribution.png");
-    fg.show();
+    let outlier_ratio = 0.05;
+    let target_outlier_num = (outlier_ratio * xs.len() as f64) as usize;
+    
+    let mut max_variance = 3.0 * der_variance;
+    loop {
+        let mut outliers = der.iter().enumerate().filter(|&(_, x)| x.abs() > max_variance).collect::<Vec<_>>();
+
+        if outliers.len() >= target_outlier_num {
+            outliers.sort_by(|&(_, a), &(_, b)| b.abs().partial_cmp(&a.abs()).unwrap());
+            for &(i, x) in outliers.iter() {
+                println!("Possible outlier: point #{}, derivative {}", i + 1, x);
+            }
+
+            break;
+        }
+        max_variance *= 0.99;
+    }
 }
