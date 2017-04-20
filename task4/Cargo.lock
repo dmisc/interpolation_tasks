@@ -5,6 +5,7 @@ dependencies = [
  "gnuplot 0.0.22 (registry+https://github.com/rust-lang/crates.io-index)",
  "interp_util 0.1.0",
  "rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
+ "statistics 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -29,7 +30,13 @@ dependencies = [
  "libc 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
+[[package]]
+name = "statistics"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
 [metadata]
 "checksum gnuplot 0.0.22 (registry+https://github.com/rust-lang/crates.io-index)" = "c37cb0149f34c62e6d0c5bf9a8c37ff8ff9d9f588ccff2aa76bd247c7ebbef97"
 "checksum libc 0.2.21 (registry+https://github.com/rust-lang/crates.io-index)" = "88ee81885f9f04bff991e306fea7c1c60a5f0f9e409e99f6b40e3311a3363135"
 "checksum rand 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "022e0636ec2519ddae48154b028864bdce4eaf7d35226ab8e65c611be97b189d"
+"checksum statistics 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)" = "3f4628c807954468b720f27d8863a5447d328378cbb874d633f6c4e952073acf"

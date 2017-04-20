@@ -7,3 +7,4 @@ authors = ["nm <idvy94@gmail.com>"]
 gnuplot = "0.0.22"
 rand = "0.3"
 interp_util = { path = "../interp_util" }
+statistics = "0.4.1"
