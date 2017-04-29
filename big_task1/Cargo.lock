@@ -1,0 +1,19 @@
+[root]
+name = "big_task1"
+version = "0.1.0"
+dependencies = [
+ "gnuplot 0.0.22 (registry+https://github.com/rust-lang/crates.io-index)",
+ "interp_util 0.1.0",
+]
+
+[[package]]
+name = "gnuplot"
+version = "0.0.22"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "interp_util"
+version = "0.1.0"
+
+[metadata]
+"checksum gnuplot 0.0.22 (registry+https://github.com/rust-lang/crates.io-index)" = "c37cb0149f34c62e6d0c5bf9a8c37ff8ff9d9f588ccff2aa76bd247c7ebbef97"

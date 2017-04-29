@@ -1,0 +1,8 @@
+[package]
+name = "big_task1"
+version = "0.1.0"
+authors = ["nm"]
+
+[dependencies]
+gnuplot = "0.0.22"
+interp_util = { path = "../interp_util" }
