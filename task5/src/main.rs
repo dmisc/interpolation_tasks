@@ -63,7 +63,7 @@ fn fourier_approximation(a: f64, b: f64, fun: Box<Fn(f64) -> f64>, ns: &[i32], n
             &mut err
         );
         assert!(status == rgsl::Value::Success);
-        res
+        res * 2.0 / (b - a)
     };
 
     for i in 1.. {
@@ -84,7 +84,7 @@ fn fourier_approximation(a: f64, b: f64, fun: Box<Fn(f64) -> f64>, ns: &[i32], n
                 &mut err
             );
             assert!(status == rgsl::Value::Success);
-            res
+            res * 2.0 / (b - a)
         };
         let bi = {
             let mut res = 0.0;
@@ -102,7 +102,7 @@ fn fourier_approximation(a: f64, b: f64, fun: Box<Fn(f64) -> f64>, ns: &[i32], n
                 &mut err
             );
             assert!(status == rgsl::Value::Success);
-            res
+            res * 2.0 / (b - a)
         };
         coef_a.push(ai);
         coef_b.push(bi);
@@ -113,7 +113,6 @@ fn fourier_approximation(a: f64, b: f64, fun: Box<Fn(f64) -> f64>, ns: &[i32], n
         if i >= *ns.iter().last().unwrap() {
             break;
         }
-        println!("Level: {}, a: {}, b: {}", i, ai, bi);
     }
 }
 
@@ -126,11 +125,11 @@ fn main() {
 
     //fourier_approximation(-1.0, 1.0, f1, &[6, 10, 13, 15, 17], "f1");
 
-    //fourier_approximation(-1.0, 1.0, f1, &[6, 10, 13, 15, 17], "f1");
-    fourier_approximation(-2.0, 2.0, f2, &[6, 10, 13, 15], "f2");
-    //fourier_approximation(-1.0, 3.0, f3, &[6, 10, 13, 15, 17], "f3");
-    //fourier_approximation( 0.0,  PI, f4, &[6, 10, 13, 15, 17], "f4");
-    //fourier_approximation(-1.0, 1.0, f5, &[6, 10, 13, 15, 17], "f5");
+    fourier_approximation(-1.0, 1.0, f1, &[6, 10, 13, 17], "f1");
+    fourier_approximation(-2.0, 2.0, f2, &[6, 10, 13], "f2");
+    fourier_approximation(-1.0, 3.0, f3, &[6, 10, 14], "f3");
+    fourier_approximation( 0.0,  PI, f4, &[6, 10, 14], "f4");
+    fourier_approximation(-1.0, 1.0, f5, &[6, 10, 15], "f5");
 
     //let h1 = thread::spawn(|| { fourier_approximation(-1.0, 1.0, f1, &[6, 10, 13, 15, 17], "f1"); });
     //let h2 = thread::spawn(|| { fourier_approximation(-2.0, 2.0, f2, &[6, 10, 13, 15, 17], "f2"); });
