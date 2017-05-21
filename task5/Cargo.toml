@@ -1,0 +1,9 @@
+[package]
+name = "task5"
+version = "0.1.0"
+authors = ["renanti <idvy94@gmail.com>"]
+
+[dependencies]
+gnuplot = "0.0.22"
+interp_util = { path = "../interp_util" }
+GSL = "0.4"
