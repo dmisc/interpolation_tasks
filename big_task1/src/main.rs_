@@ -91,51 +91,6 @@ fn solve_tridiagonal(a: &[f64], b: &[f64], c: &[f64], d: &[f64]) -> Vec<f64> {
     res
 }
 
-fn create_cubic_spline_natural(pts: &[(f64, f64)]) -> CubicSpline {
-    let y = pts.iter().map(|&(_, y)| y).collect::<Vec<_>>();
-    let t = pts.iter().map(|&(t, _)| t).collect::<Vec<_>>();
-
-    let n = pts.len();
-    let mut h = Vec::new();
-    let mut b = Vec::new();
-    let mut v = Vec::new();
-    let mut u = Vec::new();
-
-    for i in 0..n - 1 {
-        h.push(t[i + 1] - t[i]);
-        b.push((y[i + 1] - y[i]) / h.last().unwrap());
-    }
-    for i in 1..n - 1 {
-        v.push(2.0 * (h[i - 1] + h[i]));
-        u.push(6.0 * (b[i] - b[i - 1]));
-    }
-
-    let sliced_h = &h[1..h.len() - 1];
-    let res = solve_tridiagonal(sliced_h, &v, sliced_h, &u);
-    let mut z = Vec::new();
-    z.push(0.0);
-    z.extend_from_slice(&res);
-    z.push(0.0);
-
-    let mut sections = Vec::new();
-
-    for i in 0..z.len() - 1 {
-        sections.push(CubicSection {
-                          c_begin: z[i + 1] / (6.0 * h[i]),
-                          c_end: z[i] / (6.0 * h[i]),
-                          l_begin: y[i + 1] / h[i] - z[i + 1] * h[i] / 6.0,
-                          l_end: y[i] / h[i] - h[i] * z[i] / 6.0,
-                          t_begin: t[i],
-                          t_end: t[i + 1],
-                      })
-    }
-
-    CubicSpline {
-        sections: sections,
-        section_bounds: t,
-    }
-}
-
 fn create_cubic_spline_clamped(pts: &[(f64, f64)]) -> CubicSpline {
     let y = pts.iter().map(|&(_, y)| y).collect::<Vec<_>>();
     let t = pts.iter().map(|&(t, _)| t).collect::<Vec<_>>();
@@ -200,78 +155,12 @@ fn calc_lagrange_polynomial(at_x: f64, pts: &[(f64, f64)]) -> f64 {
         .sum()
 }
 
-fn calc_lagrange_polynomial_der(at_x: f64, pts: &[(f64, f64)]) -> f64 {
-    let lj = |j: usize| -> f64 {
-        let xj = pts[j].0;
-        pts.iter()
-            .map(|&(x, _)| if x == xj { 1.0 } else { (at_x - x) / (xj - x) })
-            .product()
-    };
-    let lj_der = |j: usize| -> f64 {
-        let xj = pts[j].0;
-        let a: f64 = lj(j);
-        let b: f64 = pts.iter()
-            .map(|&(x, _)| if x == xj { 0.0 } else { 1.0 / (at_x - x) })
-            .sum();
-
-        return a * b;
-    };
-    pts.iter()
-        .map(|&pt| pt.1)
-        .zip((0..pts.len()).map(lj_der))
-        .map(|(yj, lj)| yj * lj)
-        .sum()
-}
-
-fn calc_lagrange_polynomial_der2(at_x: f64, pts: &[(f64, f64)]) -> f64 {
-    let prod_exc = |i: usize, l: usize, m: usize| -> f64 {
-        pts.iter().enumerate()
-            .map(|(id, &(x, _))| if id == i || id == l || id == m { 1.0 } else { (at_x - x) / (pts[i].0 - x) })
-            .product()
-    };
-    let sum_exc = |i: usize, l: usize| -> f64 {
-        pts.iter().enumerate()
-            .map(|(id, &(x, _))| if id == i || id == l { 0.0 } else { prod_exc(i, l, id) / (pts[i].0 - x) })
-            .sum()
-    };
-    let lj_der2 = |j: usize| -> f64 {
-        pts.iter().enumerate()
-            .map(|(id, &(x, _))| if id == j { 0.0 } else { sum_exc(j, id) / (pts[j].0 - x) })
-            .sum()
-    };
-    pts.iter()
-        .map(|&pt| pt.1)
-        .zip((0..pts.len()).map(lj_der2))
-        .map(|(yj, lj)| yj * lj)
-        .sum()
-}
-
-fn calc_sp(ks: &[f64], pts: &[f64]) -> Vec<f64> {
-    pts.iter().map(|pt| {
-        ks.iter().enumerate().map(|(i, k)| { k * pt.powi(i as i32)}).sum()
-    }).collect()
-}
-fn calc_sp_der(ks: &[f64], pts: &[f64]) -> Vec<f64> {
-    pts.iter().map(|pt| {
-        ks.iter().skip(1).enumerate().map(|(i, k)| { ((i + 1) as f64) * k * pt.powi(i as i32)}).sum()
-    }).collect()
-}
-
 fn main() {
     //let x_str = "-2  -1.68421    -1.36842    -1.05263    -0.73684    -0.42105    -0.10526    0.210526    0.526316    0.842105    1.157895    1.473684    1.789474    2.105263    2.421053    2.736842    3.052632    3.368421    3.684211    4";
     //let y_str = "6.880111    5.296874    3.96331 2.891384    2.089794    1.538613    1.148618    0.810363    0.551963    0.492903    0.696817    1.169522    1.899773    2.877061    4.098098    5.577943    7.365993    9.522361    12.00553    14.59995";
 
     let x_str = "0 1 2 3 4";
     let y_str = "0 1 -2 3 -4";
-
-    let poly_coeff_str = "0 0  19.249999999999943   -34.0972222222222   20.47222222222222  -5.069444444444445  0.4444444444444444 ";
-    let mut poly_coeff = poly_coeff_str
-        .split(' ')
-        .filter(|s| !s.is_empty())
-        .map(f64::from_str)
-        .map(Result::unwrap)
-        .collect::<Vec<f64>>();
-    //poly_coeff.reverse();
 
     let xs = x_str
         .split(' ')
@@ -295,65 +184,19 @@ fn main() {
         .iter()
         .map(|x| calc_lagrange_polynomial(*x, &data))
         .collect::<Vec<_>>();
-    let pol_der_y = pol_x
-        .iter()
-        .map(|x| calc_lagrange_polynomial_der(*x, &data))
-        .collect::<Vec<_>>();
-    let pol_der2_y = pol_x
-        .iter()
-        .map(|x| calc_lagrange_polynomial_der2(*x, &data))
-        .collect::<Vec<_>>();
-
-    let spline = create_cubic_spline_natural(&data);
-    let cub_y = pol_x
-        .iter()
-        .map(|x| spline.calc(*x))
-        .collect::<Vec<_>>();
-    let cub_der_y = pol_x
-        .iter()
-        .map(|x| spline.calc_der(*x))
-        .collect::<Vec<_>>();
-    let cub_der2_y = pol_x
-        .iter()
-        .map(|x| spline.calc_der2(*x))
-        .collect::<Vec<_>>();
 
     let spline = create_cubic_spline_clamped(&data);
     let clamped_cub_y = pol_x
         .iter()
         .map(|x| spline.calc(*x))
         .collect::<Vec<_>>();
-    let clamped_cub_der_y = pol_x
-        .iter()
-        .map(|x| spline.calc_der(*x))
-        .collect::<Vec<_>>();
-    let clamped_cub_der2_y = pol_x
-        .iter()
-        .map(|x| spline.calc_der2(*x))
-        .collect::<Vec<_>>();
-
-    //plot_line_and_points("cubic"     , "Natural cubic spline"                  , &xs, &ys, &pol_x, &cub_y     );
-    //plot_line_and_points("cubic_der" , "Natural cubic spline derivative"       , &xs, &ys, &pol_x, &cub_der_y );
-    //plot_line_and_points("cubic_der2", "Natural cubic spline second derivative", &xs, &ys, &pol_x, &cub_der2_y);
 
     plot_line_and_points("clamped_cubic"     , "Clamped cubic spline"                  , &xs, &ys, &pol_x, &clamped_cub_y     );
-    plot_line_and_points("clamped_cubic_der" , "Clamped cubic spline derivative"       , &xs, &ys, &pol_x, &clamped_cub_der_y );
-    //plot_line_and_points("clamped_cubic_der2", "Clamped cubic spline second derivative", &xs, &ys, &pol_x, &clamped_cub_der2_y);
+    plot_line_and_points("lagrange"          , "Lagrange poly"                         , &xs, &ys, &pol_x, &pol_y     );
 
-    //plot_line_and_points("lagrange"     , "Lagrange poly"                  , &xs, &ys, &pol_x, &pol_y     );
-    //plot_line_and_points("lagrange_der" , "Lagrange poly derivative"       , &xs, &ys, &pol_x, &pol_der_y );
-    //plot_line_and_points("lagrange_der2", "Lagrange poly second derivative", &xs, &ys, &pol_x, &pol_der2_y);
-
-    let sp_y = calc_sp(&poly_coeff, &pol_x);
-    plot_line_and_points("poly6", "Poly6", &xs, &ys, &pol_x, &sp_y);
-
-    let sp_y_der = calc_sp_der(&poly_coeff, &pol_x);
-    plot_line_and_points("poly6_der", "Poly6 der", &xs, &xs.iter().map(|_| 0.0).collect::<Vec<_>>(), &pol_x, &sp_y_der);
-
-    let delta = sp_y.iter().zip(clamped_cub_y.iter()).map(|(p1, p2)| p1 - p2).collect::<Vec<_>>(); 
+    let delta = pol_y.iter().zip(clamped_cub_y.iter()).map(|(p1, p2)| p1 - p2).collect::<Vec<_>>(); 
     plot_line_and_points("delta", "Delta", &xs, &xs.iter().map(|_| 0.0).collect::<Vec<_>>(), &pol_x, &delta);
 }
-
 
 fn plot_line_and_points(plot_name: &str, line_caption: &str, pt_x: &[f64], pt_y: &[f64], line_x: &[f64], line_y: &[f64]) {
     let mut fg = Figure::new();

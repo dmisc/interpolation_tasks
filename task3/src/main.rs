@@ -9,6 +9,7 @@ use std::fs::File;
 use std::ops::IndexMut;
 use gnuplot::*;
 use interp_util::*;
+use std::f64;
 
 fn create_col(data: Vec<f64>) -> DMatrix<f64> {
     DMatrix::from_data(MatrixVec::new(Dynamic::new(data.len()), Dynamic::new(1), data))
@@ -43,7 +44,66 @@ fn plot(plot_name: &str, name1: &str, x1: &[f64], y1: &[f64], name2: &str, x2: &
     fg.show();
 }
 
+fn main() {
+    let xs : &[f64]  = &[0.0, 1.0, 2.0, 3.0, 4.0];
+    let ys : &[f64]  = &[0.0, 1.0, -2.0, 3.0, -4.0];
 
+    let mut resv : Vec<f64> = Vec::new();
+    let mut rows : Vec<Vec<f64>> = Vec::new();
+
+    for (x, y) in xs.iter().zip(ys.iter()) {
+        resv.push(*y);
+        let mut r : Vec<f64> = Vec::new();
+
+        for i in 0..2 + xs.len() {
+            r.push((*x).powi(i as i32));
+        }
+
+        println!("{:?}", r);
+        rows.push(r);
+    }
+
+
+    {
+        let mut r = Vec::new();
+        resv.push(0.0);
+        r.push(0.0);
+        r.push(1.0);
+        for i in 0..xs.len() {
+            r.push(0.0);
+        }
+        rows.push(r);
+    }
+    {
+        let mut r = Vec::new();
+        resv.push(0.0);
+        r.push(0.0);
+        r.push(1.0);
+        let x = xs.last().unwrap();
+        for i in 0..xs.len() {
+            r.push(((i + 2) as f64) * x.powi((i + 1) as i32));
+        }
+        rows.push(r);
+    }
+
+
+    let mut g_mat = DMatrix::identity_generic(Dynamic::new(2 + xs.len()), Dynamic::new(2 + xs.len()));
+    
+    for i in 0..rows.len() {
+        for j in 0..rows[i].len() {
+            *g_mat.index_mut((j, i)) = rows[i][j];
+        }
+    }
+
+    let xe: DMatrix<f64> = create_col(resv);
+
+    let g_mat2 = la::Matrix::new(g_mat.nrows(), g_mat.ncols(), g_mat.iter().cloned().collect());
+    let xe2 = la::Matrix::new(xe.nrows(), xe.ncols(), xe.iter().cloned().collect());
+    let k = g_mat2.solve(&xe2).unwrap();
+    println!("{:?}", k);
+}
+
+/*
 fn main() {
 
     let mut in_x = Vec::new();
@@ -98,3 +158,4 @@ fn main() {
     let f_space = space.iter().cloned().map(ft).collect::<Vec<_>>();
     plot("Task3", "Min square fit", &space, &f_space, "Points", &in_x, &in_y)
 }
+*/

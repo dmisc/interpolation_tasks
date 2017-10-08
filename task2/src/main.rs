@@ -79,6 +79,7 @@ fn plot(plot_name: &str, name1: &str, x1: &[f64], y1: &[f64], name2: &str, x2: &
     fg.show();
 }
 
+/*
 fn main() {
     let n = 11;
     let pts = linspace(-1.0, 1.0, 301);
@@ -98,6 +99,25 @@ fn main() {
     plot("Px"  , "Uniform grid", &pts, &u_base, "Chebyshev grid", &pts, &c_base);
     plot("Px.der"  , "Uniform grid", &pts, &u_base_der, "Chebyshev grid", &pts, &c_base_der);
 }
+*/
+
+fn main() {
+    let pts = vec!(0, 1, 2, 4, 5);
+    let u_grid = vec!(0, 1, -2, 3, -4);
+    let mut u_base = Vec::with_capacity(pts.len());
+    let mut u_base_der = Vec::with_capacity(pts.len());
+    for x in pts.iter() {
+        u_base.push(polynomial_error(*x, &u_grid));
+        c_base.push(polynomial_error(*x, &c_grid));
+        u_base_der.push(polynomial_derivative_error(*x, &u_grid));
+        c_base_der.push(polynomial_derivative_error(*x, &c_grid));
+    }
+
+    plot("Px"  , "Uniform grid", &pts, &u_base, "Chebyshev grid", &pts, &c_base);
+    plot("Px.der"  , "Uniform grid", &pts, &u_base_der, "Chebyshev grid", &pts, &c_base_der);
+}
+
+
 
 
 
